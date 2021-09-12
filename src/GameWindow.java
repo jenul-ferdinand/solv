@@ -2,11 +2,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class GameWindow {
-    public static void main(String[] args) {
-        // Window dimensions
-        int window_width = 1280;
-        int window_height = 720;
+    // Window dimensions
+    public static int window_width = 1366;
+    public static int window_height = 768;
 
+    public static void main(String[] args) {
         // Background color of the canvas
         Color background_colour = new Color(28, 27, 31);
 
@@ -22,13 +22,7 @@ public class GameWindow {
         main_window.setLocationRelativeTo(null); // Center the window in the middle of the screen
         main_window.getContentPane().add(main_panel); // Add the main panel inside the window
         main_window.setVisible(true); // Draw visible
-
-        // Display all the fonts
-        String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-
-        for ( int i = 0; i < fonts.length; i++ ) {
-            System.out.println(fonts[i]);
-        }
+        main_window.setResizable(false); // Not allowed to resize the window
     }
 }
 
