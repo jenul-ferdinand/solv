@@ -32,7 +32,6 @@ class MainPanel extends JPanel implements KeyListener {
     float statistics_fontsize = 20f;
 
     // Upgrades
-
     int upgrade_ystart = 110;
     int upgrade_gap = 12;
 
@@ -44,7 +43,8 @@ class MainPanel extends JPanel implements KeyListener {
     // Creation method
     public void init() {
 
-        // Create the font.
+
+        // Register and create the font and then store it as a variable Font class.
         try {
             ubuntu_font = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf"));
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -54,21 +54,27 @@ class MainPanel extends JPanel implements KeyListener {
             System.out.println("can't process fonts");
         }
 
-        // Randomise values
-        randomiseValues();
 
-        // Keyboard listener setup
+
+        // Setup the keyboard listener.
         addKeyListener(this);
         setFocusable(true);
         requestFocus();
+
+        // Randomise values
+        randomiseValues();
+
+
+
     }
 
 
     // Drawing on the panel
     public void paint(Graphics g) {
+        // Paint "black box"
         paintComponent(g);
 
-        // Anti-aliasing
+        // Activate anti-aliasing for smoother text display
         Graphics2D g2d = (Graphics2D) g;
         RenderingHints rh = new RenderingHints(
                 RenderingHints.KEY_TEXT_ANTIALIASING,
@@ -83,21 +89,20 @@ class MainPanel extends JPanel implements KeyListener {
         Font statistics_font = ubuntu_font.deriveFont(statistics_fontsize);
 
 
-        // Total marks
+
+        /* Drawing text on the screen */
         g.setColor(Color.WHITE);
+        // Total marks
         g.setFont(marks_font);
         String str = total_marks + " Marks";
         g.drawString(str, left_window_buffer, top_window_buffer + (getStringHeight(g, marks_font, str)/2));
-
         // Question value
         g.setFont(statistics_font);
         str = "Question Value: " + question_value;
         g.drawString(str, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font, str)/2)) + getStringHeight(g, marks_font, str)); // Draw under the marks
-
         // Marks per second
         str = "Marks Per Second: " + marks_per_second;
         g.drawString(str, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font, str)/2)) + getStringHeight(g, marks_font, str) + getStringHeight(g, statistics_font, str) + 10);
-
         // Question area
         g.setFont(question_font);
         str = value1 + " + " + value2;
@@ -108,108 +113,130 @@ class MainPanel extends JPanel implements KeyListener {
 
 
 
-        // Passively draw the upgrades
+        /* Draw all of the upgrades,
+           it will only be displayed if upgrade.visible is true. */
         for (int i = 0; i < upgrade.length; i++) {
             upgrade[i].draw(g);
         }
 
-        // Repaint
+
+        // Handle update to the paint cycle
         repaint();
+
     }
 
 
     /* this method is called when the user presses a key on the keyboard */
     public void keyPressed(KeyEvent e) {
+        // Locals
+        int keycode = e.getKeyCode();
+        char keychar = e.getKeyChar();
 
         // If the user presses a numerical key. We need to add that key to the keyboard_string
-        if (e.getKeyChar() >= '0' && e.getKeyChar() <= '9') {
-
+        if (keychar >= '0' && keychar <= '9') {
             // Add the char to the keyboard string
-            keyboard_string += KeyEvent.getKeyText(e.getKeyCode());
-            e.consume();
+            keyboard_string += KeyEvent.getKeyText(keycode);
 
             // Limit the keyboard string length to the char max
             if (keyboard_string.length() > char_max) {
                 keyboard_string = keyboard_string.substring(0, char_max);
             }
 
+            // Stop handling
+            e.consume();
         }
 
         // Deleting a char from the keyboard string
-        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+        if (keycode == KeyEvent.VK_BACK_SPACE) {
             if (!keyboard_string.equals("")) {
                 // Remove the last char in the string
                 keyboard_string = keyboard_string.substring(0, keyboard_string.length() - 1);
+
+                // Stop handling
+                e.consume();
             }
         }
 
         // Closing the game
-        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        if (keycode == KeyEvent.VK_ESCAPE) {
             System.exit(0); // Close game
         }
 
         // Submission of answer
-        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+        if (keycode == KeyEvent.VK_ENTER) {
 
             // If answer is correct
             if (Integer.parseInt(keyboard_string) == value1 + value2) {
-                // Add to the total_marks
-                total_marks += question_value;
+                keyboard_string = ""; // Clear the keyboard string
+                total_marks += question_value; // Add to the total_marks
+                questions_solved++; // Increment the questions solved
 
-                // Clear the keyboard string
-                keyboard_string = "";
+                randomiseValues(); // Using this function we can get new random values to solve.
+                createUpgrades(); // Run the function to check if we should show a new upgrade.
 
-                // Get new random values
-                randomiseValues();
+                e.consume(); // Stop handling
 
-                createUpgrades();
-
-                // Increment the questions solved
-                questions_solved++;
-
-                // Print line
-                System.out.println("user submitted answer and it was correct.");
+                System.out.println("User submitted the correct answer"); // Debug message
             }
+
         }
     }
     public void keyTyped(KeyEvent e) {}
     public void keyReleased(KeyEvent e) {}
 
+
+
     // Creating the upgrades
     public void createUpgrades() {
+        // Loop through all of the upgrades:
         for (int i = 0; i < upgrade.length; i++) {
+
+
+            // Displaying the upgrade if the player has progressed at or past the creation
             if (total_marks >= upgrade[i].creation) {
                 int yy;
 
                 if (i == 0) {
+                    // First upgrade should be set to the initial y position.
                     yy = upgrade_ystart;
                 }
                 else {
-                    yy = upgrade[i-1].y + upgrade[i-1].height + upgrade_gap;
+                    // The upgrade should be under the one above it.
+                    yy = upgrade[i-1].y + upgrade[i-1].button_height + upgrade_gap;
                 }
 
-                upgrade[i].visible = true;
-                upgrade[i].y = yy;
+                upgrade[i].visible = true; // Display the upgrade.
+                upgrade[i].y = yy; // Apply the vertical position change
+
+
+                System.out.println("Displayed an upgrade."); // Debug message
             }
+
+
         }
+
+
     }
 
-    /* This function returns a random integer between a specified maximum and minimum */
-    public int intRandomRange(int min, int max) {
-        return (int) ((Math.random() * (max - min)) + min);
-    }
 
-    /* This function can be used to set the question values to randomised values */
+
+    /* Returns a random integer between a specified maximum and minimum */
+    public int intRandomRange(int min, int max) { return (int) ((Math.random() * (max - min)) + min); }
+
+    /* Used to set the question values to randomised values */
     public void randomiseValues() {
         value1 = intRandomRange(1, values_max);
         value2 = intRandomRange(1, values_max);
     }
 
-    // This function will return the height of a inputted string.
+    // Return the height (pixels) of an inputted string.
     public static int getStringHeight(Graphics page, Font f, String s) {
         // Find the size of string s in the font of the Graphics context "page"
         FontMetrics fm = page.getFontMetrics(f);
         // Return the value.
         return fm.getAscent();
     }
+
+
+
 }

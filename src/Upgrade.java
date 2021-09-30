@@ -9,7 +9,7 @@ public class Upgrade extends JPanel {
 
     int x = 990;
     int y = 110;
-    int height;
+    int button_height;
 
     Boolean visible = false;
 
@@ -28,7 +28,7 @@ public class Upgrade extends JPanel {
             // Store the button image in variable
             button_image = ImageIO.read(new File("images/upgrade-button.png"));
             // Get height of the button
-            height = button_image.getHeight();
+            button_height = button_image.getHeight();
         } catch (IOException e) { }
 
         // If classified as visible
