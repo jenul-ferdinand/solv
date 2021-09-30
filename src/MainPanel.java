@@ -3,11 +3,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 class MainPanel extends JPanel implements KeyListener {
+
     Font ubuntu_font;
 
     String keyboard_string = ""; // String the user has typed
@@ -31,12 +31,18 @@ class MainPanel extends JPanel implements KeyListener {
     float marks_fontsize = 40f;
     float statistics_fontsize = 20f;
 
-    // Init buffered image
-    BufferedImage upgrade_button_image;
+    // Upgrades
+
+    int upgrade_ystart = 110;
+    int upgrade_gap = 12;
+
+    Upgrade[] upgrade = {
+         new Upgrade(2),
+         new Upgrade(4),
+    };
 
     // Creation method
     public void init() {
-
 
         // Create the font.
         try {
@@ -55,14 +61,6 @@ class MainPanel extends JPanel implements KeyListener {
         addKeyListener(this);
         setFocusable(true);
         requestFocus();
-
-
-        // Creating the images
-        try {
-            upgrade_button_image = ImageIO.read(new File("images/upgrade-button.png"));
-        } catch (IOException e) { }
-
-
     }
 
 
@@ -78,15 +76,15 @@ class MainPanel extends JPanel implements KeyListener {
         );
         g2d.setRenderingHints(rh);
 
+
         // Set the sizes of the fonts that are going to be used
         Font question_font = ubuntu_font.deriveFont(question_fontsize);
         Font marks_font = ubuntu_font.deriveFont(marks_fontsize);
         Font statistics_font = ubuntu_font.deriveFont(statistics_fontsize);
 
-        // Set the colour to white
-        g.setColor(Color.WHITE);
 
         // Total marks
+        g.setColor(Color.WHITE);
         g.setFont(marks_font);
         String str = total_marks + " Marks";
         g.drawString(str, left_window_buffer, top_window_buffer + (getStringHeight(g, marks_font, str)/2));
@@ -94,14 +92,11 @@ class MainPanel extends JPanel implements KeyListener {
         // Question value
         g.setFont(statistics_font);
         str = "Question Value: " + question_value;
-        g.drawString(str, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font, str)/2))
-                + getStringHeight(g, marks_font, str)); // Draw under the marks
+        g.drawString(str, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font, str)/2)) + getStringHeight(g, marks_font, str)); // Draw under the marks
 
         // Marks per second
         str = "Marks Per Second: " + marks_per_second;
-        g.drawString(str, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font, str)/2))
-                + getStringHeight(g, marks_font, str) + getStringHeight(g, statistics_font, str) + 10);
-
+        g.drawString(str, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font, str)/2)) + getStringHeight(g, marks_font, str) + getStringHeight(g, statistics_font, str) + 10);
 
         // Question area
         g.setFont(question_font);
@@ -112,8 +107,11 @@ class MainPanel extends JPanel implements KeyListener {
         g.drawString(str, left_window_buffer, 370 + (getStringHeight(g, question_font, str)/2));
 
 
-        // Upgrades
-        g.drawImage(upgrade_button_image, 0, 0, this);
+
+        // Passively draw the upgrades
+        for (int i = 0; i < upgrade.length; i++) {
+            upgrade[i].draw(g);
+        }
 
         // Repaint
         repaint();
@@ -164,6 +162,8 @@ class MainPanel extends JPanel implements KeyListener {
                 // Get new random values
                 randomiseValues();
 
+                createUpgrades();
+
                 // Increment the questions solved
                 questions_solved++;
 
@@ -175,7 +175,24 @@ class MainPanel extends JPanel implements KeyListener {
     public void keyTyped(KeyEvent e) {}
     public void keyReleased(KeyEvent e) {}
 
+    // Creating the upgrades
+    public void createUpgrades() {
+        for (int i = 0; i < upgrade.length; i++) {
+            if (total_marks >= upgrade[i].creation) {
+                int yy;
 
+                if (i == 0) {
+                    yy = upgrade_ystart;
+                }
+                else {
+                    yy = upgrade[i-1].y + upgrade[i-1].height + upgrade_gap;
+                }
+
+                upgrade[i].visible = true;
+                upgrade[i].y = yy;
+            }
+        }
+    }
 
     /* This function returns a random integer between a specified maximum and minimum */
     public int intRandomRange(int min, int max) {
