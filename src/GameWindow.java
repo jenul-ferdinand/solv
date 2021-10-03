@@ -12,7 +12,6 @@ public class GameWindow {
 
         // Create the interface panel
         MainPanel main_panel = new MainPanel();
-        main_panel.init();
         main_panel.setBackground(background_colour); // Set the colour of the background
 
         // Create the window frame
@@ -23,6 +22,10 @@ public class GameWindow {
         main_window.getContentPane().add(main_panel); // Add the main panel inside the window
         main_window.setVisible(true); // Draw visible
         main_window.setResizable(false); // Not allowed to resize the window
+
+        // Replace the default jar coffee icon
+        Image icon = Toolkit.getDefaultToolkit().getImage("images/windows-icon.png");
+        main_window.setIconImage(icon);
     }
 }
 

@@ -1,21 +1,19 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
+import java.awt.geom.Area;
 import java.io.File;
 import java.io.IOException;
 
-class MainPanel extends JPanel implements KeyListener {
-
-    Font ubuntu_font;
+class MainPanel extends JPanel implements KeyListener{
 
     String keyboard_string = ""; // String the user has typed
     int char_max = 2; // Limit the amount of characters the user can type
-    int total_marks = 0; // Points counting (marks)
+    public static int total_marks = 0; // Points counting (marks)
     int question_value = 1; // Value of the question (total_marks += question_value)
     int marks_per_second = 0; // The idle addition variable
-    int questions_solved = 0; // Amount of questions solved (used for progression)
+    long questions_solved = 0; // Amount of questions solved (used for progression)
     int values_max = 5; // Random values range
     int value1 = -1; // First value
     int value2 = -1; // Second value
@@ -26,23 +24,34 @@ class MainPanel extends JPanel implements KeyListener {
     int right_window_buffer = GameWindow.window_width - 25;
     int bottom_window_buffer = GameWindow.window_height - 65;
 
-    // Font sizes
+    // Fonts
+    Font ubuntu_font;
     float question_fontsize = 72f;
     float marks_fontsize = 40f;
     float statistics_fontsize = 20f;
 
     // Upgrades
     int upgrade_ystart = 110;
+    int upgrade_x = 990;
     int upgrade_gap = 12;
 
+    // Upgrade array containing all of the class types.
     Upgrade[] upgrade = {
-         new Upgrade(2),
-         new Upgrade(4),
+        new Upgrade("Pencil",                   "To do mathematics, you need something to write with.",             15L,            0,          1, 1,   "pencil.png"),
+        new Upgrade("Mathematician",            "Mathematicians do maths for a living.",                            100L,           1,          0, 4,   "mathematician.png"),
+        new Upgrade("Trigonometry",             "Trigonometry is all about triangles",                              500L,           4,          0, 6,   "trigonometry.png"),
+        new Upgrade("Amphetamine",              "A drug that increases focus and concentration.",                   3000L,          10,         0, 8,   "amphetamine.png"),
+        new Upgrade("Artificial Intelligence",  "Humans played god and made A.I",                                   10000L,         40,         0, 12,  "artificial_intelligence.png"),
+        new Upgrade("Quantum Computing",        "Powerful machines",                                                40000L,         100,        0, 16,  "quantum_computing.png"),
+        new Upgrade("Space Travel",             "Maybe we can find Aliens to help solve the math questions",        200000L,        400,        0, 24,  "space_travel.png"),
+        new Upgrade("Time Travel",              "Travelling into the future to find the answer to our questions",   1500000L,       6666,       0, 32,  "time_travel.png"),
+        new Upgrade("Animal Sacrifice",         "A ritiual sacrificing an animal to solve maths",                   123666666L,     98765,      0, 64,  "animal_sacrifice.png"),
+        new Upgrade("Undead Experiment",        "Bringing the dead back to life",                                   3999999999L,    999999,     0, 76,  "undead_experiments.png"),
+        new Upgrade("Nuclear Warefare",         "This isn't about solving maths anymore",                           75000000000L,   10000000,   0, 102, "nuclear_warfare.png"),
     };
 
-    // Creation method
-    public void init() {
-
+    // Constructor
+    MainPanel() {
 
         // Register and create the font and then store it as a variable Font class.
         try {
@@ -55,7 +64,6 @@ class MainPanel extends JPanel implements KeyListener {
         }
 
 
-
         // Setup the keyboard listener.
         addKeyListener(this);
         setFocusable(true);
@@ -64,22 +72,20 @@ class MainPanel extends JPanel implements KeyListener {
         // Randomise values
         randomiseValues();
 
-
-
+        // Add a mouse listener to each of the upgrades
+        for (int i = 0; i < upgrade.length; i++) {
+            addMouseListener(upgrade[i]);
+            System.out.println("added mouse listener to upgrade " + i);
+        }
     }
-
 
     // Drawing on the panel
     public void paint(Graphics g) {
-        // Paint "black box"
         paintComponent(g);
 
-        // Activate anti-aliasing for smoother text display
+        // Anti-aliasing for smoother text display
         Graphics2D g2d = (Graphics2D) g;
-        RenderingHints rh = new RenderingHints(
-                RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_GASP
-        );
+        RenderingHints rh = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
         g2d.setRenderingHints(rh);
 
 
@@ -89,12 +95,13 @@ class MainPanel extends JPanel implements KeyListener {
         Font statistics_font = ubuntu_font.deriveFont(statistics_fontsize);
 
 
+        //region Drawing Text
 
-        /* Drawing text on the screen */
         g.setColor(Color.WHITE);
+        String str;
         // Total marks
         g.setFont(marks_font);
-        String str = total_marks + " Marks";
+        str = total_marks + " Marks";
         g.drawString(str, left_window_buffer, top_window_buffer + (getStringHeight(g, marks_font, str)/2));
         // Question value
         g.setFont(statistics_font);
@@ -111,10 +118,11 @@ class MainPanel extends JPanel implements KeyListener {
         str = "= " + keyboard_string;
         g.drawString(str, left_window_buffer, 370 + (getStringHeight(g, question_font, str)/2));
 
+        //endregion
 
 
-        /* Draw all of the upgrades,
-           it will only be displayed if upgrade.visible is true. */
+        // Draw all of the upgrades,
+        // it will only be drawn if the upgrade is displayed on the interface
         for (int i = 0; i < upgrade.length; i++) {
             upgrade[i].draw(g);
         }
@@ -125,17 +133,14 @@ class MainPanel extends JPanel implements KeyListener {
 
     }
 
-
-    /* this method is called when the user presses a key on the keyboard */
+    //region Key Listener Interface Methods
     public void keyPressed(KeyEvent e) {
-        // Locals
-        int keycode = e.getKeyCode();
-        char keychar = e.getKeyChar();
 
         // If the user presses a numerical key. We need to add that key to the keyboard_string
-        if (keychar >= '0' && keychar <= '9') {
+        if (e.getKeyChar() >= '0' && e.getKeyChar() <= '9') {
+
             // Add the char to the keyboard string
-            keyboard_string += KeyEvent.getKeyText(keycode);
+            keyboard_string += KeyEvent.getKeyText(e.getKeyCode());
 
             // Limit the keyboard string length to the char max
             if (keyboard_string.length() > char_max) {
@@ -144,29 +149,33 @@ class MainPanel extends JPanel implements KeyListener {
 
             // Stop handling
             e.consume();
+
         }
 
         // Deleting a char from the keyboard string
-        if (keycode == KeyEvent.VK_BACK_SPACE) {
+        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
             if (!keyboard_string.equals("")) {
+
                 // Remove the last char in the string
                 keyboard_string = keyboard_string.substring(0, keyboard_string.length() - 1);
 
                 // Stop handling
                 e.consume();
             }
+
         }
 
         // Closing the game
-        if (keycode == KeyEvent.VK_ESCAPE) {
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
             System.exit(0); // Close game
         }
 
         // Submission of answer
-        if (keycode == KeyEvent.VK_ENTER) {
+        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 
             // If answer is correct
             if (Integer.parseInt(keyboard_string) == value1 + value2) {
+
                 keyboard_string = ""; // Clear the keyboard string
                 total_marks += question_value; // Add to the total_marks
                 questions_solved++; // Increment the questions solved
@@ -180,17 +189,18 @@ class MainPanel extends JPanel implements KeyListener {
             }
 
         }
+
+
     }
     public void keyTyped(KeyEvent e) {}
     public void keyReleased(KeyEvent e) {}
+    //endregion
 
 
-
-    // Creating the upgrades
+    // Process of creating the upgrades and setting their positions on the interface
     public void createUpgrades() {
         // Loop through all of the upgrades:
         for (int i = 0; i < upgrade.length; i++) {
-
 
             // Displaying the upgrade if the player has progressed at or past the creation
             if (total_marks >= upgrade[i].creation) {
@@ -205,9 +215,8 @@ class MainPanel extends JPanel implements KeyListener {
                     yy = upgrade[i-1].y + upgrade[i-1].button_height + upgrade_gap;
                 }
 
-                upgrade[i].visible = true; // Display the upgrade.
+                upgrade[i].displayed = true; // Display the upgrade.
                 upgrade[i].y = yy; // Apply the vertical position change
-
 
                 System.out.println("Displayed an upgrade."); // Debug message
             }
@@ -237,6 +246,8 @@ class MainPanel extends JPanel implements KeyListener {
         return fm.getAscent();
     }
 
-
+    public static void increaseTotalMarks(int amount) {
+        total_marks += amount;
+    }
 
 }
