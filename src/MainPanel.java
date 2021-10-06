@@ -1,8 +1,11 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -10,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 class MainPanel extends JPanel implements KeyListener{
 
     String keyboard_string = ""; // String the user has typed
-    int char_max = 2; // Limit the amount of characters the user can type
+    int char_max = 3; // Limit the amount of characters the user can type
     public static int total_marks = 0; // Points counting (marks)
     public static int question_value = 1; // Value of the question (total_marks += question_value)
     public static int marks_per_second = 0; // The idle addition variable
@@ -25,8 +28,8 @@ class MainPanel extends JPanel implements KeyListener{
     int right_window_buffer = GameWindow.window_width - 25;
     int bottom_window_buffer = GameWindow.window_height - 65;
 
-    int question_area_ypos = 300;
-    int answer_area_ypos = 370;
+    int question_area_ypos = 295;
+    int answer_area_ypos = 375;
 
     // Fonts
     Font ubuntu_font;
@@ -34,34 +37,45 @@ class MainPanel extends JPanel implements KeyListener{
     float marks_fontsize = 40f;
     float statistics_fontsize = 20f;
 
+    // Images
+    BufferedImage backdrop_image1;
+    BufferedImage backdrop_image2;
+    BufferedImage backdrop_image3;
+    BufferedImage backdrop_display_image = backdrop_image1;
+
     // Upgrades
     int upgrade_ystart = 110;
     int upgrade_x = 990;
     int upgrade_gap = 12;
-
     // Debug
     boolean developer_mode = true;
 
-    // Upgrade array containing all of the class types.
+
+
+
+    //region Upgrade array containing all of the class types.
     Upgrade[] upgrade = {
-        new Upgrade("Pencil",                   "To do mathematics, you need something to write with.",             15L,            0,          1, 1,   "pencil.png"),
-        new Upgrade("Mathematician",            "Mathematicians do maths for a living.",                            100L,           1,          0, 4,   "mathematician.png"),
-        new Upgrade("Trigonometry",             "Trigonometry is all about triangles",                              500L,           4,          0, 6,   "trigonometry.png"),
-        new Upgrade("Amphetamine",              "A drug that increases focus and concentration.",                   3000L,          10,         0, 8,   "amphetamine.png"),
-        new Upgrade("Artificial Intelligence",  "Humans played god and made A.I",                                   10000L,         40,         0, 12,  "artificial_intelligence.png"),
-        new Upgrade("Quantum Computing",        "Powerful machines",                                                40000L,         100,        0, 16,  "quantum_computing.png"),
-        new Upgrade("Space Travel",             "Maybe we can find Aliens to help solve the math questions",        200000L,        400,        0, 24,  "space_travel.png"),
-        new Upgrade("Time Travel",              "Travelling into the future to find the answer to our questions",   1500000L,       6666,       0, 32,  "time_travel.png"),
-        new Upgrade("Animal Sacrifice",         "A ritiual sacrificing an animal to solve maths",                   123666666L,     98765,      0, 64,  "animal_sacrifice.png"),
-        new Upgrade("Undead Experiment",        "Bringing the dead back to life",                                   3999999999L,    999999,     0, 76,  "undead_experiments.png"),
-        new Upgrade("Nuclear Warefare",         "This isn't about solving maths anymore",                           75000000000L,   10000000,   0, 102, "nuclear_warfare.png"),
-    };
+            new Upgrade("Pencil",                   "To do mathematics, you need something to write with.",             15L,            0,          1, 1,   "pencil.png"),
+            new Upgrade("Mathematician",            "Mathematicians do maths for a living.",                            100L,           1,          0, 4,   "mathematician.png"),
+            new Upgrade("Trigonometry",             "Trigonometry is all about triangles",                              500L,           4,          0, 6,   "trigonometry.png"),
+            new Upgrade("Amphetamine",              "A drug that increases focus and concentration.",                   3000L,          10,         0, 8,   "amphetamine.png"),
+            new Upgrade("Artificial Intelligence",  "Humans played god and made A.I",                                   10000L,         40,         0, 12,  "artificial_intelligence.png"),
+            new Upgrade("Quantum Computing",        "Powerful machines",                                                40000L,         100,        0, 16,  "quantum_computing.png"),
+            new Upgrade("Space Travel",             "Maybe we can find Aliens to help solve the math questions",        200000L,        400,        0, 24,  "space_travel.png"),
+            new Upgrade("Time Travel",              "Travelling into the future to find the answer to our questions",   1500000L,       6666,       0, 32,  "time_travel.png"),
+            new Upgrade("Animal Sacrifice",         "A ritiual sacrificing an animal to solve maths",                   123666666L,     98765,      0, 64,  "animal_sacrifice.png"),
+            new Upgrade("Undead Experiment",        "Bringing the dead back to life",                                   3999999999L,    999999,     0, 76,  "undead_experiments.png"),
+            new Upgrade("Nuclear Warefare",         "This isn't about solving maths anymore",                           75000000000L,   10000000,   0, 102, "nuclear_warfare.png"),
+    }; //endregion
 
     // Constructor
     MainPanel() {
+        // Debugging large number
+        System.out.println("" + stringLargeNumber(new BigDecimal("321876412896321321")));
 
-        // Register and create the font and then store it as a variable Font class.
+
         try {
+            // Register and load main font
             if (ubuntu_font == null) ubuntu_font = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf"));
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf")));
@@ -84,11 +98,7 @@ class MainPanel extends JPanel implements KeyListener{
 
         // Runnable thread every second
         // https://stackoverflow.com/questions/12908412/print-hello-world-every-x-seconds
-        Runnable everySecond = new Runnable() {
-            public void run() {
-                total_marks += marks_per_second;
-            }
-        };
+        Runnable everySecond = () -> { total_marks += marks_per_second; };
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(everySecond, 0, 1, TimeUnit.SECONDS);
@@ -103,13 +113,34 @@ class MainPanel extends JPanel implements KeyListener{
         RenderingHints rh = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
         g2d.setRenderingHints(rh);
 
-
         // Draw all the upgrades
-        // it will only be drawn if the upgrade object is flagged as displayed.
+        // It will only be drawn if the upgrade object is flagged as displayed.
         for (int i = 0; i < upgrade.length; i++) {
             upgrade[i].draw((Graphics2D) g);
         }
 
+        // Loading images
+        try {
+            // Backdrops
+            if (backdrop_image1 == null) backdrop_image1 = ImageIO.read(new File("images/backdrop-level1.png"));
+            if (backdrop_image2 == null) backdrop_image2 = ImageIO.read(new File("images/backdrop-level2.png"));
+            if (backdrop_image3 == null) backdrop_image3 = ImageIO.read(new File("images/backdrop-level3.png"));
+        } catch (IOException e) {}
+        // Switching between the different backdrop images for different string lengths
+        switch (keyboard_string.length()) {
+            case 0:
+            case 1:
+                backdrop_display_image = backdrop_image1;
+                break;
+            case 2:
+                backdrop_display_image = backdrop_image2;
+                break;
+            case 3:
+                backdrop_display_image = backdrop_image3;
+                break;
+        }
+        // Draw the backdrop under the answer area
+        g.drawImage(backdrop_display_image, left_window_buffer - 5, 380, this);
 
         // Set the sizes of the fonts that are going to be used
         Font question_font = ubuntu_font.deriveFont(question_fontsize);
@@ -133,7 +164,6 @@ class MainPanel extends JPanel implements KeyListener{
         // Answer area
         g.drawString("= " + keyboard_string, left_window_buffer, answer_area_ypos + (getStringHeight(g, question_font)));
 
-
         // Handle update to the paint cycle
         repaint();
     }
@@ -151,6 +181,8 @@ class MainPanel extends JPanel implements KeyListener{
             if (keyboard_string.length() > char_max) {
                 keyboard_string = keyboard_string.substring(0, char_max);
             }
+
+
 
             // Stop handling
             e.consume();
@@ -265,5 +297,83 @@ class MainPanel extends JPanel implements KeyListener{
         return fm.getAscent();
     }
 
+    public String stringLargeNumber(BigDecimal number) {
+        //region Arrays
+        BigDecimal[] large_numbers = {
+            new BigDecimal("1000000"),
+            new BigDecimal("1000000000"),
+            new BigDecimal("1000000000000"),
+            new BigDecimal("1000000000000000"),
+            new BigDecimal("1000000000000000000"),
+            new BigDecimal("1000000000000000000000"),
+            new BigDecimal("1000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000000000000000000000"),
+            new BigDecimal("1000000000000000000000000000000000000000000000000000000000000000")
+        };
+        String[] abbreviations = {
+            "Million",
+            "Billion",
+            "Trillion",
+            "Quadrillion",
+            "Quintillion",
+            "Sextillion",
+            "Septillion",
+            "Octillion",
+            "Nonillion",
+            "Decillion",
+            "Undecillion",
+            "Duodecillion",
+            "Tredecillion",
+            "Quattuordecillion",
+            "Quindecillion",
+            "Sexdecillion",
+            "Septendecillion",
+            "Octodecillion",
+            "Novemdecillion",
+            "Vigintillion",
+        }; // endregion
 
+        BigDecimal number_prefix;
+        String string_prefix = "";
+        String string_suffix = "";
+
+        for (int i = 0; i < large_numbers.length; i++) {
+            BigDecimal lower = large_numbers[i].subtract(BigDecimal.ONE);
+            BigDecimal upper;
+
+            // Final index buffer
+            if (i == large_numbers.length-1) { upper = new BigDecimal(large_numbers[large_numbers.length-1] + "000"); }
+            else { upper = large_numbers[i+1]; }
+
+            // Conversion of the number to abbreviated form.
+            if (number.compareTo(lower) > 0 && number.compareTo(upper) < 0) {
+                number_prefix = number.divide(large_numbers[i]);
+                string_prefix = String.format(java.util.Locale.US,"%.3f", number_prefix);
+                string_suffix = abbreviations[i];
+            }
+            // If the number is bigger than the largest listed value, flag it as "Infinity".
+            else if (number.compareTo(large_numbers[large_numbers.length-1]) > 0) {
+                string_prefix = "Infinity";
+                string_suffix = "";
+            }
+            // If the number is less than one million, just leave it as it is.
+            else if (number.compareTo(large_numbers[0]) < 0) {
+                string_prefix = number.toString();
+                string_suffix = "";
+            }
+        }
+
+        return string_prefix + " " + string_suffix;
+    }
 }

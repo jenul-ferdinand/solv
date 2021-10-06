@@ -92,6 +92,7 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
 
             // Draw the details
             if (ubuntu_font != null) {
+                g.setColor(Color.WHITE);
                 g.setFont(label_font);
                 g.drawString(name + ": " + quantity, x + icon_width + 15, y + getStringHeight(g, label_font) + 10);
             }
