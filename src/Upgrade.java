@@ -1,21 +1,20 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.awt.Graphics2D;
+import java.math.BigDecimal;
 
-public class Upgrade extends JPanel implements MouseListener, MouseMotionListener {
+public class Upgrade extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
 
     // Properties
     boolean displayed = false;
-    int x = 990;
-    int y = 110;
+    int x = MainPanel.upgrade_x;
+    int y = MainPanel.upgrade_ystart;
     int quantity = 0;
 
     // Images
@@ -36,6 +35,16 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
     Font ubuntu_font;
     Font label_font;
     float label_fontsize = 20f;
+    // Colours
+    Color cost_colour_green = new Color(52, 237, 104);
+    Color cost_colour_red = new Color(235, 64, 52);
+    Color cost_colour = cost_colour_green;
+
+    // Scrolling
+    int scroll_speed = 36;
+    boolean scroll_down_locked = true;
+    boolean scroll_up_locked = true;
+
     // Attributes initialisation
     String name, desc, icon_path;
     int creation, mps, qv;
@@ -81,8 +90,9 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
 
         // Visible drawing elements
         if (displayed) {
-
+            // Font resizing
             if (ubuntu_font != null) label_font = ubuntu_font.deriveFont(label_fontsize);
+
 
             // Draw the button
             g.drawImage(button_displayed_image, x, y,this);
@@ -94,20 +104,20 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
             if (ubuntu_font != null) {
                 g.setColor(Color.WHITE);
                 g.setFont(label_font);
-                g.drawString(name + ": " + quantity, x + icon_width + 15, y + getStringHeight(g, label_font) + 10);
+                g.drawString(name + ": " + quantity, x + icon_width + 15, (y + getStringHeight(g, label_font)) + 10);
+                g.setColor(cost_colour);
+                g.drawString("M:" + MainPanel.stringLargeNumber(new BigDecimal(cost)), x + icon_width + 15, (y + getStringHeight(g, label_font)) + button_height - 30);
             }
 
 
 
             // Draw the flash image with alpha composite implemented
             // https://www.daniweb.com/programming/software-development/threads/358686/setting-image-opacity
-            Composite default_composite = g.getComposite();
-            AlphaComposite alpha_composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, flash_alpha);
-            g.setComposite(alpha_composite);
-            g.drawImage(button_white_image, x, y, this);
-            g.setComposite(default_composite);
-
-
+            Composite default_composite = g.getComposite(); // Get the original composite
+            AlphaComposite flash_alpha_composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, flash_alpha); // Create the alpha composite
+            g.setComposite(flash_alpha_composite); // Set to the alpha composite
+            g.drawImage(button_white_image, x, y, this); // Draw the white flash overlay
+            g.setComposite(default_composite); // Reset back to the original composite
 
             // Linear interpolate alpha back to zero
             if (flash_alpha > 0) {
@@ -116,14 +126,7 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
                 flash_alpha = 0;
             }
         }
-
     }
-
-    private int getStringHeight(Graphics page, Font f) {
-        FontMetrics fm = page.getFontMetrics(f);
-        return fm.getAscent();
-    }
-
 
     //region Mouse Interface
     public void mousePressed(MouseEvent e) {
@@ -137,12 +140,9 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
                 if  (MainPanel.total_marks >= cost) {
 
                     MainPanel.total_marks -= cost;
-
                     MainPanel.marks_per_second += mps;
                     MainPanel.question_value += qv;
-
                     quantity++;
-
                     flash_alpha = 1f;
 
                     // Increase the cost using cookie clicker formula, this is fundamental for difficulty.
@@ -153,17 +153,42 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
                     // Debug
                     System.out.println(name + " upgrade purchased!");
                 }
-
             }
-
         }
-
     }
     public void mouseClicked(MouseEvent e) {}
     public void mouseReleased(MouseEvent e) {}
     public void mouseEntered(MouseEvent e) {}
     public void mouseExited(MouseEvent e) {}
     public void mouseDragged(MouseEvent e) {}
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        // Must be displayed
+        if (displayed) {
+            // Scrolling
+            int scroll = e.getWheelRotation();
+            if (scroll < 0 && !scroll_up_locked) {
+                y += scroll_speed;
+            }
+            if (scroll > 0 && !scroll_down_locked) {
+                y -= scroll_speed;
+            }
+
+            // Locking scrolling
+            Upgrade first_upgrade = MainPanel.upgrade[0];
+            if (first_upgrade.y >= 80) {
+                scroll_up_locked = true;
+            } else {
+                scroll_up_locked = false;
+            }
+            if (first_upgrade.y <= MainPanel.upgrade_ystart-36*19) {
+                scroll_down_locked = true;
+            } else {
+                scroll_down_locked = false;
+            }
+        }
+
+        //System.out.println("" + y);
+    }
     public void mouseMoved(MouseEvent e) {
         // Set the area of the button
         button_area = new Area(new Rectangle(x, y, button_width, button_height));
@@ -179,6 +204,13 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
     }
     //endregion
 
+    // Getting the height of a string
+    private int getStringHeight(Graphics page, Font f) {
+        FontMetrics fm = page.getFontMetrics(f);
+        return fm.getAscent();
+    }
+
+    // Linear interpolation method
     public float lerp(float a, float b, float f) {
         return a + f * (b - a);
     }

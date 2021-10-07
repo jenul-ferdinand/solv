@@ -10,11 +10,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-class MainPanel extends JPanel implements KeyListener{
+class MainPanel extends JPanel implements KeyListener {
 
+    //region Variable Initialisation
     String keyboard_string = ""; // String the user has typed
     int char_max = 3; // Limit the amount of characters the user can type
-    public static int total_marks = 0; // Points counting (marks)
+    public static int total_marks = 0; // Points counting (marks) CHANGE THIS TO A DATA TYPE THAT CAN HOLD MORE LATER
+    double display_marks = 0;
+    double display_mps = 0;
+    double display_qv = 0;
     public static int question_value = 1; // Value of the question (total_marks += question_value)
     public static int marks_per_second = 0; // The idle addition variable
     long questions_solved = 0; // Amount of questions solved (used for progression)
@@ -44,17 +48,12 @@ class MainPanel extends JPanel implements KeyListener{
     BufferedImage backdrop_display_image = backdrop_image1;
 
     // Upgrades
-    int upgrade_ystart = 110;
-    int upgrade_x = 990;
-    int upgrade_gap = 12;
-    // Debug
-    boolean developer_mode = true;
+    public static int upgrade_ystart = 80;
+    public static int upgrade_x = 990;
+    public static int upgrade_gap = 12;
 
-
-
-
-    //region Upgrade array containing all of the class types.
-    Upgrade[] upgrade = {
+    //region Upgrade array containing all the class types.
+    public static Upgrade[] upgrade = {
             new Upgrade("Pencil",                   "To do mathematics, you need something to write with.",             15L,            0,          1, 1,   "pencil.png"),
             new Upgrade("Mathematician",            "Mathematicians do maths for a living.",                            100L,           1,          0, 4,   "mathematician.png"),
             new Upgrade("Trigonometry",             "Trigonometry is all about triangles",                              500L,           4,          0, 6,   "trigonometry.png"),
@@ -63,17 +62,17 @@ class MainPanel extends JPanel implements KeyListener{
             new Upgrade("Quantum Computing",        "Powerful machines",                                                40000L,         100,        0, 16,  "quantum_computing.png"),
             new Upgrade("Space Travel",             "Maybe we can find Aliens to help solve the math questions",        200000L,        400,        0, 24,  "space_travel.png"),
             new Upgrade("Time Travel",              "Travelling into the future to find the answer to our questions",   1500000L,       6666,       0, 32,  "time_travel.png"),
-            new Upgrade("Animal Sacrifice",         "A ritiual sacrificing an animal to solve maths",                   123666666L,     98765,      0, 64,  "animal_sacrifice.png"),
+            new Upgrade("Animal Sacrifice",         "A ritiual sacrificing an animal to solve maths",                   123666444L,     98765,      0, 64,  "animal_sacrifice.png"),
             new Upgrade("Undead Experiment",        "Bringing the dead back to life",                                   3999999999L,    999999,     0, 76,  "undead_experiments.png"),
-            new Upgrade("Nuclear Warefare",         "This isn't about solving maths anymore",                           75000000000L,   10000000,   0, 102, "nuclear_warfare.png"),
+            new Upgrade("Nuclear Warfare",          "This isn't about solving maths anymore",                           75000000000L,   10000000,   0, 102, "nuclear_warfare.png"),
     }; //endregion
+
+    // Debug
+    boolean developer_mode = true;
+    //endregion
 
     // Constructor
     MainPanel() {
-        // Debugging large number
-        System.out.println("" + stringLargeNumber(new BigDecimal("321876412896321321")));
-
-
         try {
             // Register and load main font
             if (ubuntu_font == null) ubuntu_font = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf"));
@@ -93,6 +92,7 @@ class MainPanel extends JPanel implements KeyListener{
         for (int i = 0; i < upgrade.length; i++) {
             addMouseListener(upgrade[i]);
             addMouseMotionListener(upgrade[i]);
+            addMouseWheelListener(upgrade[i]);
             System.out.println("added mouse listener to upgrade " + i);
         }
 
@@ -149,31 +149,33 @@ class MainPanel extends JPanel implements KeyListener{
 
         // Drawing text
         g.setColor(Color.WHITE);
-        String str;
+
+        // Incrementally adding the values
+        display_marks = lerpDisplayed(display_marks, total_marks, 0.3);
+        display_mps = lerpDisplayed(display_mps, marks_per_second, 0.3);
+        display_qv = lerpDisplayed(display_qv, question_value, 0.3);
+
         // Total marks
         g.setFont(marks_font);
-        g.drawString(total_marks + " Marks", left_window_buffer, top_window_buffer + (getStringHeight(g, marks_font)));
+        g.drawString(stringLargeNumber(new BigDecimal(Math.round(display_marks))) + " marks", left_window_buffer, top_window_buffer + (getStringHeight(g, marks_font)));
         // Question value
         g.setFont(statistics_font);
-        g.drawString("Question Value: " + question_value, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, marks_font) + 10);
+        g.drawString("question value: " + new BigDecimal(Math.round(display_qv)), left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, marks_font) + 10);
         // Marks per second
-        g.drawString("Marks Per Second: " + marks_per_second, left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, marks_font) + getStringHeight(g, statistics_font) + 20);
+        g.drawString("marks per second: " + new BigDecimal(Math.round(display_mps)), left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, marks_font) + getStringHeight(g, statistics_font) + 20);
         // Question area
         g.setFont(question_font);
         g.drawString(value1 + " + " + value2, left_window_buffer, question_area_ypos + (getStringHeight(g, question_font)));
         // Answer area
         g.drawString("= " + keyboard_string, left_window_buffer, answer_area_ypos + (getStringHeight(g, question_font)));
 
-        // Handle update to the paint cycle
         repaint();
     }
 
     //region Key Listener Interface Methods
     public void keyPressed(KeyEvent e) {
-
         // If the user presses a numerical key. We need to add that key to the keyboard_string
         if (e.getKeyChar() >= '0' && e.getKeyChar() <= '9') {
-
             // Add the char to the keyboard string
             keyboard_string += KeyEvent.getKeyText(e.getKeyCode());
 
@@ -182,36 +184,25 @@ class MainPanel extends JPanel implements KeyListener{
                 keyboard_string = keyboard_string.substring(0, char_max);
             }
 
-
-
-            // Stop handling
             e.consume();
-
         }
 
         // Deleting characters
         if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
             if (!keyboard_string.equals("")) {
-
                 // Remove the last char in the string
                 keyboard_string = keyboard_string.substring(0, keyboard_string.length() - 1);
 
-                // Stop handling
                 e.consume();
             }
-
         }
 
         // Parsing
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-
             // There must be text typed in
             if (!keyboard_string.equals("")) {
-
-
                 // If answer is correct
                 if (Integer.parseInt(keyboard_string) == value1 + value2) {
-
                     keyboard_string = ""; // Clear the keyboard string
                     total_marks += question_value; // Add to the total_marks
                     questions_solved++; // Increment the questions solved
@@ -222,14 +213,10 @@ class MainPanel extends JPanel implements KeyListener{
                     e.consume(); // Stop handling
 
                     System.out.println("Correct");
-
                 } else {
-
                     System.out.println("Wrong");
                 }
-
             } else {
-
                 System.out.println("No text");
             }
         }
@@ -240,8 +227,9 @@ class MainPanel extends JPanel implements KeyListener{
             System.exit(0);
         }
 
+        // Developer mode cheats
         if (developer_mode && e.getKeyCode() == KeyEvent.VK_EQUALS) {
-            total_marks += 100000;
+            total_marks += question_value * 1000;
             createUpgrades();
         }
     }
@@ -252,7 +240,7 @@ class MainPanel extends JPanel implements KeyListener{
 
     // Process of creating the upgrades and setting their positions on the interface
     public void createUpgrades() {
-        // Loop through all of the upgrades:
+        // Loop through all the upgrades:
         for (int i = 0; i < upgrade.length; i++) {
 
             // Displaying the upgrade if the player has progressed at or past the creation
@@ -273,14 +261,8 @@ class MainPanel extends JPanel implements KeyListener{
 
                 System.out.println("Displayed an upgrade."); // Debug message
             }
-
-
         }
-
-
     }
-
-
 
     /* Returns a random integer between a specified maximum and minimum */
     public int intRandomRange(int min, int max) { return (int) ((Math.random() * (max - min)) + min); }
@@ -297,7 +279,8 @@ class MainPanel extends JPanel implements KeyListener{
         return fm.getAscent();
     }
 
-    public String stringLargeNumber(BigDecimal number) {
+    // Convert large numbers to abbreviated version
+    public static String stringLargeNumber(BigDecimal number) {
         //region Arrays
         BigDecimal[] large_numbers = {
             new BigDecimal("1000000"),
@@ -359,7 +342,7 @@ class MainPanel extends JPanel implements KeyListener{
             // Conversion of the number to abbreviated form.
             if (number.compareTo(lower) > 0 && number.compareTo(upper) < 0) {
                 number_prefix = number.divide(large_numbers[i]);
-                string_prefix = String.format(java.util.Locale.US,"%.3f", number_prefix);
+                string_prefix = String.format(java.util.Locale.US,"%.3f", number_prefix); // Format to 3 decimal places.
                 string_suffix = abbreviations[i];
             }
             // If the number is bigger than the largest listed value, flag it as "Infinity".
@@ -374,6 +357,17 @@ class MainPanel extends JPanel implements KeyListener{
             }
         }
 
-        return string_prefix + " " + string_suffix;
+        return string_prefix + " " + string_suffix.toLowerCase();
     }
+
+    public double lerpDisplayed(double value, int target, double lerp) {
+        if (value < target) {
+            value = value + lerp * (target - value);
+        } else {
+            value = target;
+        }
+
+        return value;
+    }
+
 }
