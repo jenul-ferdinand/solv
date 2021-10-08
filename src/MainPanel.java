@@ -32,9 +32,6 @@ class MainPanel extends JPanel implements KeyListener {
     int right_window_buffer = GameWindow.window_width - 25;
     int bottom_window_buffer = GameWindow.window_height - 65;
 
-    int question_area_ypos = 295;
-    int answer_area_ypos = 375;
-
     // Fonts
     Font ubuntu_font;
     float question_fontsize = 72f;
@@ -52,9 +49,17 @@ class MainPanel extends JPanel implements KeyListener {
     public static int upgrade_x = 990;
     public static int upgrade_gap = 12;
 
+    // Q&A area
+    int question_area_ypos = 295;
+    int answer_area_ypos = 375;
+    // Separator
+    int shop_background_x = upgrade_x - 30;
+    int shop_background_width = 6;
+    Color shop_background_colour = new Color(34, 33, 38);
+
     //region Upgrade array containing all the class types.
     public static Upgrade[] upgrade = {
-            new Upgrade("Pencil",                   "To do mathematics, you need something to write with.",             15L,            0,          1, 1,   "pencil.png"),
+            new Upgrade("Pencil",                   "To do mathematics, you need something to write with.",             15L,            0,          10,1,   "pencil.png"),
             new Upgrade("Mathematician",            "Mathematicians do maths for a living.",                            100L,           1,          0, 4,   "mathematician.png"),
             new Upgrade("Trigonometry",             "Trigonometry is all about triangles",                              500L,           4,          0, 6,   "trigonometry.png"),
             new Upgrade("Amphetamine",              "A drug that increases focus and concentration.",                   3000L,          10,         0, 8,   "amphetamine.png"),
@@ -108,16 +113,15 @@ class MainPanel extends JPanel implements KeyListener {
     public void paint(Graphics g) {
         paintComponent(g);
 
+        // Set the sizes of the fonts that are going to be used
+        Font question_font = ubuntu_font.deriveFont(question_fontsize);
+        Font marks_font = ubuntu_font.deriveFont(marks_fontsize);
+        Font statistics_font = ubuntu_font.deriveFont(statistics_fontsize);
+
         // Anti-aliasing for smoother text display
         Graphics2D g2d = (Graphics2D) g;
         RenderingHints rh = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
         g2d.setRenderingHints(rh);
-
-        // Draw all the upgrades
-        // It will only be drawn if the upgrade object is flagged as displayed.
-        for (int i = 0; i < upgrade.length; i++) {
-            upgrade[i].draw((Graphics2D) g);
-        }
 
         // Loading images
         try {
@@ -126,6 +130,7 @@ class MainPanel extends JPanel implements KeyListener {
             if (backdrop_image2 == null) backdrop_image2 = ImageIO.read(new File("images/backdrop-level2.png"));
             if (backdrop_image3 == null) backdrop_image3 = ImageIO.read(new File("images/backdrop-level3.png"));
         } catch (IOException e) {}
+
         // Switching between the different backdrop images for different string lengths
         switch (keyboard_string.length()) {
             case 0:
@@ -139,45 +144,64 @@ class MainPanel extends JPanel implements KeyListener {
                 backdrop_display_image = backdrop_image3;
                 break;
         }
-        // Draw the backdrop under the answer area
+        // backdrop under the answer area
         g.drawImage(backdrop_display_image, left_window_buffer - 5, 380, this);
 
-        // Set the sizes of the fonts that are going to be used
-        Font question_font = ubuntu_font.deriveFont(question_fontsize);
-        Font marks_font = ubuntu_font.deriveFont(marks_fontsize);
-        Font statistics_font = ubuntu_font.deriveFont(statistics_fontsize);
+        // Shop background
+        g.setColor(shop_background_colour);
+        g.fillRect(shop_background_x, 0, shop_background_x + shop_background_width, GameWindow.window_height);
 
-        // Drawing text
+        // Draw all the upgrades
+        // It will only be drawn if the upgrade object is flagged as displayed.
+        for (int i = 0; i < upgrade.length; i++) {
+            upgrade[i].draw((Graphics2D) g);
+            //upgrade[i].button_displayed_image = upgrade[i].button_image;
+        }
+
+        // Draw a rectangle to cover the upgrades when they are scrolled up
+        g.setColor(shop_background_colour);
+        g.fillRect(upgrade_x, 0, GameWindow.window_width-upgrade_x, upgrade_ystart);
         g.setColor(Color.WHITE);
+
+        // Upgrades heading
+        g.setFont(statistics_font);
+        String text = "Upgrades";
+        FontMetrics fm = g2d.getFontMetrics();
+        int string_width = getStringWidth(text, g, statistics_font);
+        g.drawString(text, upgrade_x + upgrade[0].button_width/2 - (string_width/2), upgrade_ystart/2);
+
 
         // Incrementally adding the values
         display_marks = lerpDisplayed(display_marks, total_marks, 0.3);
         display_mps = lerpDisplayed(display_mps, marks_per_second, 0.3);
         display_qv = lerpDisplayed(display_qv, question_value, 0.3);
 
+        //region TEXT
         // Total marks
         g.setFont(marks_font);
-        g.drawString(stringLargeNumber(new BigDecimal(Math.round(display_marks))) + " marks", left_window_buffer, top_window_buffer + (getStringHeight(g, marks_font)));
+        g.drawString(stringLargeNumber(new BigDecimal(Math.round(display_marks))) + " marks", left_window_buffer, top_window_buffer);
         // Question value
         g.setFont(statistics_font);
-        g.drawString("question value: " + new BigDecimal(Math.round(display_qv)), left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, marks_font) + 10);
+        g.drawString("question value: " + stringLargeNumber(new BigDecimal(Math.round(display_qv))), left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + 10);
         // Marks per second
-        g.drawString("marks per second: " + new BigDecimal(Math.round(display_mps)), left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, marks_font) + getStringHeight(g, statistics_font) + 20);
+        g.drawString("marks per second: " + stringLargeNumber(new BigDecimal(Math.round(display_mps))), left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, statistics_font) + 20);
         // Question area
         g.setFont(question_font);
         g.drawString(value1 + " + " + value2, left_window_buffer, question_area_ypos + (getStringHeight(g, question_font)));
         // Answer area
         g.drawString("= " + keyboard_string, left_window_buffer, answer_area_ypos + (getStringHeight(g, question_font)));
+        //endregion
 
+        // Handle the paint event
         repaint();
     }
 
     //region Key Listener Interface Methods
     public void keyPressed(KeyEvent e) {
         // If the user presses a numerical key. We need to add that key to the keyboard_string
-        if (e.getKeyChar() >= '0' && e.getKeyChar() <= '9') {
+        if (e.getKeyChar() >= '0' && e.getKeyChar() <= '9' || e.getKeyChar() == '-') {
             // Add the char to the keyboard string
-            keyboard_string += KeyEvent.getKeyText(e.getKeyCode());
+            keyboard_string += e.getKeyChar();
 
             // Limit the keyboard string length to the char max
             if (keyboard_string.length() > char_max) {
@@ -273,15 +297,20 @@ class MainPanel extends JPanel implements KeyListener {
         value2 = intRandomRange(1, values_max);
     }
 
-    // Return the height (pixels) of an inputted string.
+    // Returning height or width of a font
     public static int getStringHeight(Graphics page, Font f) {
         FontMetrics fm = page.getFontMetrics(f);
         return fm.getAscent();
     }
+    public static int getStringWidth(String string, Graphics g, Font f) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        FontMetrics fm = g2d.getFontMetrics();
+        return fm.stringWidth(string);
+    }
 
     // Convert large numbers to abbreviated version
     public static String stringLargeNumber(BigDecimal number) {
-        //region Arrays
+        //region ARRAYS
         BigDecimal[] large_numbers = {
             new BigDecimal("1000000"),
             new BigDecimal("1000000000"),
@@ -350,14 +379,24 @@ class MainPanel extends JPanel implements KeyListener {
                 string_prefix = "Infinity";
                 string_suffix = "";
             }
-            // If the number is less than one million, just leave it as it is.
+            // If the number is less than one million
             else if (number.compareTo(large_numbers[0]) < 0) {
+                // Store number as a string
                 string_prefix = number.toString();
-                string_suffix = "";
+                // Adding commas between the numbers
+                for (int j = string_prefix.length() - 3; j > 1; j -= 3) {
+                    string_prefix = addChar(string_prefix, ',', j);
+                }
+
+                string_suffix = ""; // No abbreviation
             }
         }
 
         return string_prefix + " " + string_suffix.toLowerCase();
+    }
+
+    public static String addChar(String str, char ch, int position) {
+        return str.substring(0, position) + ch + str.substring(position);
     }
 
     public double lerpDisplayed(double value, int target, double lerp) {

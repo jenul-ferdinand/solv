@@ -6,10 +6,10 @@ public class GameWindow {
     public static int window_width = 1366;
     public static int window_height = 768;
 
-    public static void main(String[] args) {
-        // Background color of the canvas
-        Color background_colour = new Color(28, 27, 31);
+    // Background color of the canvas
+    public static Color background_colour = new Color(28, 27, 31);
 
+    public static void main(String[] args) {
         // Create the interface panel
         MainPanel main_panel = new MainPanel();
         main_panel.setBackground(background_colour); // Set the colour of the background
