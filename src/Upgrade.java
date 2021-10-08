@@ -1,15 +1,12 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.awt.Graphics2D;
 import java.math.BigDecimal;
 
-public class Upgrade extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
+public class Upgrade extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, CommonMethods {
 
     //region Variable Initialisation
     // Properties
@@ -69,34 +66,22 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
 
     // Drawing the upgrade and it's contents
     public void draw(Graphics2D g) {
-
-        // Image & font management
-        try {
-            // Store the button image in variable
-            if (button_image == null) button_image = ImageIO.read(new File("images/upgrade-button.png"));
-            if (button_bright_image == null) button_bright_image = ImageIO.read(new File("images/upgrade-button-bright.png"));
-            if (button_white_image == null) button_white_image = ImageIO.read(new File("images/upgrade-button-white.png"));
-            // Get height and width of the button
+        // Button
+        button_image = getImage(button_image, "upgrade-button.png");
+        button_width = button_image.getWidth();
         button_height = button_image.getHeight();
-            button_width = button_image.getWidth();
+        button_bright_image = getImage(button_bright_image, "upgrade-button-bright.png");
         button_white_image = getImage(button_white_image, "upgrade-button-white.png");
         button_black_image = getImage(button_black_image, "upgrade-button-black.png");
-
-            // Store the icon image in variable
-            if (icon_image == null) icon_image = ImageIO.read(new File("images/" + icon_path));
-        // Get height and width of the icon
+        // Icon
+        icon_image = getImage(icon_image, icon_path);
         icon_height = icon_image.getHeight();
         icon_width = icon_image.getWidth();
 
-        // Image & font management
-        try {
-            // Fonts
-            if (ubuntu_font == null) ubuntu_font = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf"));
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf")));
-        } catch (IOException | FontFormatException e) { }
+        // Load font
+        ubuntu_font = getFont(ubuntu_font, "Ubuntu-R.ttf");
 
-        // Visible drawing elements
+        // Visible elements
         if (displayed) {
             if (button_displayed_image == null) button_displayed_image = button_image; // Set first image
             if (ubuntu_font != null) label_font = ubuntu_font.deriveFont(label_fontsize); // Font resizing
@@ -113,7 +98,7 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
 
                 // Cost
                 g.setColor(cost_colour);
-                g.drawString("M:" + MainPanel.stringLargeNumber(new BigDecimal(cost)), x + icon_width + 15, (y + getStringHeight(g, label_font)) + button_height - 30);
+                g.drawString("M:" + stringLargeNumber(new BigDecimal(cost)), x + icon_width + 15, (y + getStringHeight(g, label_font)) + button_height - 30);
 
                 // Check affordability to change settings
                 if (MainPanel.total_marks >= cost) {
@@ -212,18 +197,7 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
         }
     }
 
-    // Getting the height of a string
-    public int getStringHeight(Graphics page, Font f) {
-        FontMetrics fm = page.getFontMetrics(f);
-        return fm.getAscent();
-    }
-
-    // Linear interpolation method
-    public float lerp(float a, float b, float f) {
-        return a + f * (b - a);
-    }
-
-    //region Non-functioning mouse interface methods
+    //region Not used mouse interface methods
     public void mouseClicked(MouseEvent e) {}
     public void mouseReleased(MouseEvent e) {}
     public void mouseEntered(MouseEvent e) {}

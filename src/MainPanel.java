@@ -1,16 +1,13 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-class MainPanel extends JPanel implements KeyListener {
+class MainPanel extends JPanel implements KeyListener, CommonMethods {
 
     //region Variable Initialisation
     String keyboard_string = ""; // String the user has typed
@@ -37,6 +34,7 @@ class MainPanel extends JPanel implements KeyListener {
     float question_fontsize = 72f;
     float marks_fontsize = 40f;
     float statistics_fontsize = 20f;
+    float upgrades_heading_fontsize = 27f;
 
     // Images
     BufferedImage backdrop_image1;
@@ -78,12 +76,8 @@ class MainPanel extends JPanel implements KeyListener {
 
     // Constructor
     MainPanel() {
-        try {
-            // Register and load main font
-            if (ubuntu_font == null) ubuntu_font = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf"));
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Ubuntu-R.ttf")));
-        } catch (IOException | FontFormatException e) {}
+        // Load the font
+        ubuntu_font = getFont(ubuntu_font, "Ubuntu-Medium.ttf");
 
         // Setup the keyboard listener.
         addKeyListener(this);
@@ -117,6 +111,7 @@ class MainPanel extends JPanel implements KeyListener {
         Font question_font = ubuntu_font.deriveFont(question_fontsize);
         Font marks_font = ubuntu_font.deriveFont(marks_fontsize);
         Font statistics_font = ubuntu_font.deriveFont(statistics_fontsize);
+        Font upgrades_heading_font = ubuntu_font.deriveFont(upgrades_heading_fontsize);
 
         // Anti-aliasing for smoother text display
         Graphics2D g2d = (Graphics2D) g;
@@ -124,13 +119,9 @@ class MainPanel extends JPanel implements KeyListener {
         g2d.setRenderingHints(rh);
 
         // Loading images
-        try {
-            // Backdrops
-            if (backdrop_image1 == null) backdrop_image1 = ImageIO.read(new File("images/backdrop-level1.png"));
-            if (backdrop_image2 == null) backdrop_image2 = ImageIO.read(new File("images/backdrop-level2.png"));
-            if (backdrop_image3 == null) backdrop_image3 = ImageIO.read(new File("images/backdrop-level3.png"));
-        } catch (IOException e) {}
-
+        backdrop_image1 = getImage(backdrop_image1, "backdrop-level1.png");
+        backdrop_image2 = getImage(backdrop_image2, "backdrop-level2.png");
+        backdrop_image3 = getImage(backdrop_image3, "backdrop-level3.png");
         // Switching between the different backdrop images for different string lengths
         switch (keyboard_string.length()) {
             case 0:
@@ -160,15 +151,15 @@ class MainPanel extends JPanel implements KeyListener {
 
         // Draw a rectangle to cover the upgrades when they are scrolled up
         g.setColor(shop_background_colour);
-        g.fillRect(upgrade_x, 0, GameWindow.window_width-upgrade_x, upgrade_ystart);
+        g.fillRect(upgrade_x, 0, GameWindow.window_width - shop_background_x, upgrade_ystart);
         g.setColor(Color.WHITE);
 
         // Upgrades heading
-        g.setFont(statistics_font);
+        g.setFont(upgrades_heading_font);
         String text = "Upgrades";
         FontMetrics fm = g2d.getFontMetrics();
         int string_width = getStringWidth(text, g, statistics_font);
-        g.drawString(text, upgrade_x + upgrade[0].button_width/2 - (string_width/2), upgrade_ystart/2);
+        g.drawString(text, shop_background_x + (GameWindow.window_width - shop_background_x)/2 - (string_width/2) - 5, upgrade_ystart/2 + 5);
 
 
         // Incrementally adding the values
@@ -288,125 +279,9 @@ class MainPanel extends JPanel implements KeyListener {
         }
     }
 
-    /* Returns a random integer between a specified maximum and minimum */
-    public int intRandomRange(int min, int max) { return (int) ((Math.random() * (max - min)) + min); }
-
     /* Used to set the question values to randomised values */
     public void randomiseValues() {
         value1 = intRandomRange(1, values_max);
         value2 = intRandomRange(1, values_max);
     }
-
-    // Returning height or width of a font
-    public static int getStringHeight(Graphics page, Font f) {
-        FontMetrics fm = page.getFontMetrics(f);
-        return fm.getAscent();
-    }
-    public static int getStringWidth(String string, Graphics g, Font f) {
-        Graphics2D g2d = (Graphics2D) g.create();
-        FontMetrics fm = g2d.getFontMetrics();
-        return fm.stringWidth(string);
-    }
-
-    // Convert large numbers to abbreviated version
-    public static String stringLargeNumber(BigDecimal number) {
-        //region ARRAYS
-        BigDecimal[] large_numbers = {
-            new BigDecimal("1000000"),
-            new BigDecimal("1000000000"),
-            new BigDecimal("1000000000000"),
-            new BigDecimal("1000000000000000"),
-            new BigDecimal("1000000000000000000"),
-            new BigDecimal("1000000000000000000000"),
-            new BigDecimal("1000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000000000000000000000"),
-            new BigDecimal("1000000000000000000000000000000000000000000000000000000000000000")
-        };
-        String[] abbreviations = {
-            "Million",
-            "Billion",
-            "Trillion",
-            "Quadrillion",
-            "Quintillion",
-            "Sextillion",
-            "Septillion",
-            "Octillion",
-            "Nonillion",
-            "Decillion",
-            "Undecillion",
-            "Duodecillion",
-            "Tredecillion",
-            "Quattuordecillion",
-            "Quindecillion",
-            "Sexdecillion",
-            "Septendecillion",
-            "Octodecillion",
-            "Novemdecillion",
-            "Vigintillion",
-        }; // endregion
-
-        BigDecimal number_prefix;
-        String string_prefix = "";
-        String string_suffix = "";
-
-        for (int i = 0; i < large_numbers.length; i++) {
-            BigDecimal lower = large_numbers[i].subtract(BigDecimal.ONE);
-            BigDecimal upper;
-
-            // Final index buffer
-            if (i == large_numbers.length-1) { upper = new BigDecimal(large_numbers[large_numbers.length-1] + "000"); }
-            else { upper = large_numbers[i+1]; }
-
-            // Conversion of the number to abbreviated form.
-            if (number.compareTo(lower) > 0 && number.compareTo(upper) < 0) {
-                number_prefix = number.divide(large_numbers[i]);
-                string_prefix = String.format(java.util.Locale.US,"%.3f", number_prefix); // Format to 3 decimal places.
-                string_suffix = abbreviations[i];
-            }
-            // If the number is bigger than the largest listed value, flag it as "Infinity".
-            else if (number.compareTo(large_numbers[large_numbers.length-1]) > 0) {
-                string_prefix = "Infinity";
-                string_suffix = "";
-            }
-            // If the number is less than one million
-            else if (number.compareTo(large_numbers[0]) < 0) {
-                // Store number as a string
-                string_prefix = number.toString();
-                // Adding commas between the numbers
-                for (int j = string_prefix.length() - 3; j > 1; j -= 3) {
-                    string_prefix = addChar(string_prefix, ',', j);
-                }
-
-                string_suffix = ""; // No abbreviation
-            }
-        }
-
-        return string_prefix + " " + string_suffix.toLowerCase();
-    }
-
-    public static String addChar(String str, char ch, int position) {
-        return str.substring(0, position) + ch + str.substring(position);
-    }
-
-    public double lerpDisplayed(double value, int target, double lerp) {
-        if (value < target) {
-            value = value + lerp * (target - value);
-        } else {
-            value = target;
-        }
-
-        return value;
-    }
-
 }
