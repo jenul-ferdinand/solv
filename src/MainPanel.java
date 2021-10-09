@@ -244,14 +244,13 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
 
         // Developer mode cheats
         if (developer_mode && e.getKeyCode() == KeyEvent.VK_EQUALS) {
-            total_marks += question_value * 1000;
+            total_marks += question_value * 100000;
             createUpgrades();
         }
     }
     public void keyTyped(KeyEvent e) {}
     public void keyReleased(KeyEvent e) {}
     //endregion
-
 
     // Process of creating the upgrades and setting their positions on the interface
     public void createUpgrades() {

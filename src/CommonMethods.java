@@ -39,6 +39,34 @@ interface CommonMethods {
 		FontMetrics fm = g2d.getFontMetrics();
 		return fm.stringWidth(string);
 	}
+	// For drawing multi line strings https://stackoverflow.com/a/19864657/10069286
+	default void drawStringMultiLine(Graphics2D g, String text, int lineWidth, int x, int y) {
+		FontMetrics m = g.getFontMetrics();
+		if(m.stringWidth(text) < lineWidth) {
+			g.drawString(text, x, y);
+		} else {
+			String[] words = text.split(" ");
+			String currentLine = words[0];
+			for(int i = 1; i < words.length; i++) {
+				if(m.stringWidth(currentLine+words[i]) < lineWidth) {
+					currentLine += " "+words[i];
+				} else {
+					g.drawString(currentLine, x, y);
+					y += m.getHeight();
+					currentLine = words[i];
+				}
+			}
+			if(currentLine.trim().length() > 0) {
+				g.drawString(currentLine, x, y);
+			}
+		}
+	}
+
+	default void drawString(Graphics g, String text, int x, int y) {
+		int lineHeight = g.getFontMetrics().getHeight();
+		for (String line : text.split("\n"))
+			g.drawString(line, x, y += lineHeight);
+	}
 
 	// Linear interpolation method
 	default float lerp(float a, float b, float f) {
