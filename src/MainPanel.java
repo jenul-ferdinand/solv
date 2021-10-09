@@ -22,6 +22,9 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
     int values_max = 5; // Random values range
     int value1 = -1; // First value
     int value2 = -1; // Second value
+    int arithmetic_type = 0;
+    String[] arithmetic_string = {"+", "-", "x", "/" };
+    String answer;
 
     // Window buffers
     int top_window_buffer = 60;
@@ -107,6 +110,9 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
     public void paint(Graphics g) {
         paintComponent(g);
 
+        // Make sure division values are always even, so we don't get decimal answers.
+        if (arithmetic_type == 3 && (value1 % value2) != 0) { randomiseValues(); }
+
         // Set the sizes of the fonts that are going to be used
         Font question_font = ubuntu_font.deriveFont(question_fontsize);
         Font marks_font = ubuntu_font.deriveFont(marks_fontsize);
@@ -144,10 +150,7 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
 
         // Draw all the upgrades
         // It will only be drawn if the upgrade object is flagged as displayed.
-        for (int i = 0; i < upgrade.length; i++) {
-            upgrade[i].draw((Graphics2D) g);
-            //upgrade[i].button_displayed_image = upgrade[i].button_image;
-        }
+        for (int i = 0; i < upgrade.length; i++) { upgrade[i].draw((Graphics2D) g); }
 
         // Draw a rectangle to cover the upgrades when they are scrolled up
         g.setColor(shop_background_colour);
@@ -178,7 +181,7 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
         g.drawString("marks per second: " + stringLargeNumber(new BigDecimal(Math.round(display_mps))), left_window_buffer, (top_window_buffer + (getStringHeight(g, statistics_font))) + getStringHeight(g, statistics_font) + 20);
         // Question area
         g.setFont(question_font);
-        g.drawString(value1 + " + " + value2, left_window_buffer, question_area_ypos + (getStringHeight(g, question_font)));
+        g.drawString(value1 + " " + arithmetic_string[arithmetic_type] + " " + value2, left_window_buffer, question_area_ypos + (getStringHeight(g, question_font)));
         // Answer area
         g.drawString("= " + keyboard_string, left_window_buffer, answer_area_ypos + (getStringHeight(g, question_font)));
         //endregion
@@ -216,23 +219,26 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             // There must be text typed in
             if (!keyboard_string.equals("")) {
-                // If answer is correct
-                if (Integer.parseInt(keyboard_string) == value1 + value2) {
+                // Get the string answer value of a question type
+                answer = getArithmetic(arithmetic_type);
+                // If the typed string is the same as the answer string
+                if (keyboard_string.equals(answer)) {
                     keyboard_string = ""; // Clear the keyboard string
                     total_marks += question_value; // Add to the total_marks
                     questions_solved++; // Increment the questions solved
+                    arithmetic_type = intRandomRange(0, 4); // Get new question type
 
                     randomiseValues(); // Using this function we can get new random values to solve.
                     createUpgrades(); // Run the function to check if we should show a new upgrade.
 
                     e.consume(); // Stop handling
 
-                    System.out.println("Correct");
+                    System.out.println("Correct answer");
                 } else {
-                    System.out.println("Wrong");
+                    System.out.println("Wrong answer");
                 }
             } else {
-                System.out.println("No text");
+                System.out.println("No text inputted");
             }
         }
 
@@ -276,6 +282,28 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
                 System.out.println("Displayed an upgrade."); // Debug message
             }
         }
+    }
+
+    // Get answers for different types of questions, called in the parser
+    public String getArithmetic(int type) {
+        int  output = 0;
+        // Go through all the different types of questions
+        switch (type) {
+            case 0:
+                output = value1 + value2;
+                break;
+            case 1:
+                output = value1 - value2;
+                break;
+            case 2:
+                output = value1 * value2;
+                break;
+            case 3:
+                output = value1 / value2;
+                break;
+        }
+        // Return the string value of the output
+        return "" + output;
     }
 
     /* Used to set the question values to randomised values */
