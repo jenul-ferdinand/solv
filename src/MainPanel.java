@@ -58,6 +58,9 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
     int shop_background_width = 6;
     Color shop_background_colour = new Color(34, 33, 38);
 
+    // Debug
+    boolean developer_mode = false;
+
     //region Upgrade array containing all the class types.
     public static Upgrade[] upgrade = {
             new Upgrade("Pencil",                   "To do mathematics, you need something to write with.",             15L,            0,          10,1,   "pencil.png"),
@@ -72,9 +75,6 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
             new Upgrade("Undead Experiment",        "Bringing the dead back to life",                                   3999999999L,    999999,     0, 76,  "undead_experiments.png"),
             new Upgrade("Nuclear Warfare",          "This isn't about solving maths anymore",                           75000000000L,   10000000,   0, 102, "nuclear_warfare.png"),
     }; //endregion
-
-    // Debug
-    boolean developer_mode = true;
     //endregion
 
     // Constructor
