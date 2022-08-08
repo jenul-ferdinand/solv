@@ -15,8 +15,8 @@ public class GameWindow {
         main_panel.setBackground(background_colour); // Set the colour of the background
 
         // Create the window frame
-        JFrame main_window = new JFrame("MadMath Idle");
-        main_window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JFrame main_window = new JFrame("MadMath Idle"); // The title to be displayed in the frame's border
+        main_window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Make sure we exit the application when we close
         main_window.setBounds(0, 0, window_width, window_height); // Set the window dimensions
         main_window.setLocationRelativeTo(null); // Center the window in the middle of the screen
         main_window.getContentPane().add(main_panel); // Add the main panel inside the window

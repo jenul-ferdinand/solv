@@ -147,6 +147,7 @@ public class Upgrade extends JPanel implements MouseListener, MouseMotionListene
                         int x_pos = tooltip_left+tooltip_buffer;
                         drawStringMultiLine(g, "["+name+"]", line_width, x_pos, tooltip_y+tooltip_buffer+font_height);
                         drawStringMultiLine(g, desc, line_width, x_pos, (tooltip_y+tooltip_buffer+font_height) + font_height*3);
+
                         // Proper english
                         String plural;
                         String str_quantity = ""+quantity;

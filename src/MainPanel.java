@@ -22,7 +22,7 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
     int values_max = 5; // Random values range
     int value1 = -1; // First value
     int value2 = -1; // Second value
-    int arithmetic_type = 0;
+    int arithmetic_type = 0; // This variable is the index for the arithmetic_string array.
     String[] arithmetic_string = {"+", "-", "x", "/" };
     String answer;
 
@@ -71,7 +71,7 @@ class MainPanel extends JPanel implements KeyListener, CommonMethods {
             new Upgrade("Quantum Computing",        "Powerful machines",                                                40000L,         100,        0, 16,  "quantum_computing.png"),
             new Upgrade("Space Travel",             "Maybe we can find Aliens to help solve the math questions",        200000L,        400,        0, 24,  "space_travel.png"),
             new Upgrade("Time Travel",              "Travelling into the future to find the answer to our questions",   1500000L,       6666,       0, 32,  "time_travel.png"),
-            new Upgrade("Animal Sacrifice",         "A ritiual sacrificing an animal to solve maths",                   123666444L,     98765,      0, 64,  "animal_sacrifice.png"),
+            new Upgrade("Animal Sacrifice",         "A ritual sacrificing an animal to solve maths",                    123666444L,     98765,      0, 64,  "animal_sacrifice.png"),
             new Upgrade("Undead Experiment",        "Bringing the dead back to life",                                   3999999999L,    999999,     0, 76,  "undead_experiments.png"),
             new Upgrade("Nuclear Warfare",          "This isn't about solving maths anymore",                           75000000000L,   10000000,   0, 102, "nuclear_warfare.png"),
     }; //endregion
